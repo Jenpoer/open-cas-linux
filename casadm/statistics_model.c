@@ -630,6 +630,8 @@ int cache_stats_conf(int ctrl_fd, const struct kcas_cache_info *cache_info,
 		      promotion_policy_to_name(cache_info->info.promotion_policy));
 	print_kv_pair(outfile, "Prefetch Policy", "%s", standby ? "-" :
 		      prefetch_mask_to_name(cache_info->info.prefetch_mask));
+	print_kv_pair(outfile, "Eviction Policy", "%s", standby ? "-" :
+		      eviction_policy_to_name(cache_info->info.eviction_policy));
 	print_kv_pair(outfile, "Cache line size", "%llu, [KiB]",
 		      cache_info->info.cache_line_size / KiB);
 

@@ -1118,6 +1118,41 @@ int cache_mngt_get_prefetch_param(ocf_cache_t cache, ocf_pf_id_t pf_id,
 	return result;
 }
 
+int cache_mngt_set_eviction_policy(ocf_cache_t cache, ocf_eviction_t type)
+{
+	int result;
+
+	result = _cache_mngt_lock_sync(cache);
+	if (result) {
+		return result;
+	}
+
+	result = ocf_mngt_cache_eviction_set_policy(cache, type);
+	if (result)
+		goto out;
+
+	result = _cache_mngt_save_sync(cache);
+
+out:
+	ocf_mngt_cache_unlock(cache);
+	return result;
+}
+
+int cache_mngt_get_eviction_policy(ocf_cache_t cache, ocf_eviction_t *type)
+{
+	int result;
+
+	result = _cache_mngt_read_lock_sync(cache);
+	if (result) {
+		return result;
+	}
+
+	result = ocf_mngt_cache_eviction_get_policy(cache, type);
+
+	ocf_mngt_cache_read_unlock(cache);
+	return result;
+}
+
 struct get_paths_ctx {
 	char *core_path_name_tab;
 	int max_count;
@@ -2040,6 +2075,7 @@ int cache_mngt_create_cache_cfg(struct ocf_mngt_cache_config *cfg,
 	strncpy(cfg->name, cache_name, OCF_CACHE_NAME_SIZE - 1);
 	cfg->cache_mode = cmd->caching_mode;
 	cfg->cache_line_size = cmd->line_size;
+	cfg->eviction_policy = cmd->eviction_policy;
 	cfg->promotion_policy = ocf_promotion_default;
 	cfg->cache_line_size = cmd->line_size;
 	cfg->pt_unaligned_io = !unaligned_io;

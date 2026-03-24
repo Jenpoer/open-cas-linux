@@ -117,6 +117,7 @@ enum output_format_t {
 const char *cleaning_policy_to_name(uint8_t policy);
 const char *promotion_policy_to_name(uint8_t policy);
 const char *prefetch_mask_to_name(uint8_t mask);
+const char *eviction_policy_to_name(uint8_t policy);
 const char *cache_mode_to_name(uint8_t cache_mode);
 const char *get_cache_state_name(int cache_state, bool detached);
 const char *get_core_state_name(int core_state);
@@ -143,6 +144,7 @@ void metadata_memory_footprint(uint64_t size, float *footprint, const char **uni
 
 int start_cache(uint16_t cache_id, unsigned int cache_init,
 		const char *cache_device, ocf_cache_mode_t cache_mode,
+		ocf_eviction_t eviction_policy,
 		ocf_cache_line_size_t line_size, int force);
 int stop_cache(uint16_t cache_id, int flush);
 
@@ -163,6 +165,11 @@ int connect_cache(const char *cache_device);
 #define CAS_CLI_HELP_START_CACHE_MODES_FULL "Write-Through, Write-Back, Write-Around, Pass-Through, Write-Only"
 #define CAS_CLI_HELP_SET_CACHE_MODES_FULL "Write-Through, Write-Back, Write-Around, Pass-Through, Write-Only"
 #endif
+
+#define CAS_CLI_HELP_START_EVICTION_POLICY "lru|lfu"
+#define CAS_CLI_HELP_SET_EVICTION_POLICY "lru|lfu"
+#define CAS_CLI_HELP_START_EVICTION_POLICY_FULL "Least-Recently-Used, Least-Frequently-Used"
+#define CAS_CLI_HELP_SET_EVICTION_POLICY_FULL "Least-Recently-Used, Least-Frequently-Used"
 
 /**
  * @brief handle set cache param command
@@ -337,6 +344,7 @@ int validate_path(const char *path, int exist);
 int validate_str_cache_mode(const char *s);
 int validate_str_cln_policy(const char *s);
 int validate_str_promotion_policy(const char *s);
+int validate_str_eviction_policy(const char *s);
 int validate_str_stats_filters(const char* s);
 int validate_str_output_format(const char* s);
 

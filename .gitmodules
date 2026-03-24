@@ -1,6 +1,7 @@
 [submodule "ocf"]
 	path = ocf
-	url = https://github.com/Open-CAS/ocf.git
+	url = git@seagit.okla.seagate.com:adapt-ml/lfu-fork/ocf-lfu-fork.git
+	branch = change_eviction_policy
 [submodule "test/functional/test-framework"]
 	path = test/functional/test-framework
 	url = https://github.com/Open-CAS/test-framework.git

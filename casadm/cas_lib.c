@@ -274,6 +274,12 @@ static struct name_to_val_mapping promotion_policy_names[] = {
 	{ NULL}
 };
 
+static struct name_to_val_mapping eviction_policy_names[] = {
+	{ .short_name = "lru", .value = ocf_eviction_lru },
+	{ .short_name = "lfu", .value = ocf_eviction_lfu },
+	{ NULL}
+};
+
 static struct name_to_val_mapping seq_cutoff_policy_names[] = {
 	{ .short_name = "always", .value = ocf_seq_cutoff_policy_always },
 	{ .short_name = "full", .value = ocf_seq_cutoff_policy_full },
@@ -453,6 +459,14 @@ const char *prefetch_mask_to_name(uint8_t mask)
 
 	buf[pos] = '\0';
 	return buf;
+}
+
+inline int validate_str_eviction_policy(const char *s) {
+	return validate_str_val_mapping(s, eviction_policy_names, -1);
+}
+
+inline const char *eviction_policy_to_name(uint8_t policy) {
+	return val_to_short_name(policy, eviction_policy_names, "Unknown");
 }
 
 const char *seq_cutoff_policy_to_name(uint8_t seq_cutoff_policy)
@@ -996,6 +1010,7 @@ static int _verify_and_parse_volume_path(char *tgt_buf,
 
 static int _start_cache(uint16_t cache_id, unsigned int cache_init,
 		const char *cache_device, ocf_cache_mode_t cache_mode,
+		ocf_eviction_t eviction_policy,
 		ocf_cache_line_size_t line_size, int force, bool start)
 {
 	int fd = 0;
@@ -1020,6 +1035,7 @@ static int _start_cache(uint16_t cache_id, unsigned int cache_init,
 
 	cmd.cache_id = cache_id;
 	cmd.caching_mode = cache_mode;
+	cmd.eviction_policy = eviction_policy;
 	cmd.line_size = line_size;
 	cmd.force = (uint8_t)force;
 	cmd.init_cache = cache_init;
@@ -1090,16 +1106,17 @@ static int _start_cache(uint16_t cache_id, unsigned int cache_init,
 
 int start_cache(uint16_t cache_id, unsigned int cache_init,
 		const char *cache_device, ocf_cache_mode_t cache_mode,
+		ocf_eviction_t eviction_policy,
 		ocf_cache_line_size_t line_size, int force)
 {
 	return _start_cache(cache_id, cache_init, cache_device, cache_mode,
-			line_size, force, true);
+			eviction_policy, line_size, force, true);
 }
 
 int attach_cache(uint16_t cache_id, const char *cache_device, int force)
 {
 	return _start_cache(cache_id, CACHE_INIT_NEW, cache_device,
-			ocf_cache_mode_none, ocf_cache_line_size_none, force, false);
+			ocf_cache_mode_none, ocf_eviction_default, ocf_cache_line_size_none, force, false);
 }
 
 int detach_cache(uint16_t cache_id)
@@ -3236,6 +3253,7 @@ int standby_init(int cache_id, ocf_cache_line_size_t line_size,
 			CACHE_INIT_STANDBY_NEW,
 			cache_device,
 			ocf_cache_mode_default,
+			ocf_eviction_default,
 			line_size,
 			force);
 }
@@ -3247,6 +3265,7 @@ int standby_load(int cache_id, ocf_cache_line_size_t line_size,
 			CACHE_INIT_STANDBY_LOAD,
 			cache_device,
 			ocf_cache_mode_none,
+			ocf_eviction_default,
 			line_size,
 			0);
 }

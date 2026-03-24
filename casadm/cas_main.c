@@ -51,6 +51,7 @@ struct command_args{
 	int line_size;
 	int cache_state_flush;
 	int flush_data;
+	int eviction_policy_type;
 	int cleaning_policy_type;
 	int promotion_policy_type;
 	int script_subcmd;
@@ -79,6 +80,7 @@ static struct command_args command_args_values = {
 		.line_size = ocf_cache_line_size_none,
 		.cache_state_flush = UNDEFINED, /* three state logic: YES NO UNDEFINED */
 		.flush_data = 1,
+		.eviction_policy_type = 0,
 		.cleaning_policy_type = 0,
 		.promotion_policy_type = 0,
 		.script_subcmd = -1,
@@ -302,6 +304,12 @@ int start_cache_command_handle_option(char *opt, const char **arg)
 			return FAILURE;
 
 		command_args_values.line_size = atoi((const char*)arg[0]) * KiB;
+	} else if (!strcmp(opt, "eviction-policy")) {
+		command_args_values.eviction_policy_type =
+				validate_str_eviction_policy((const char*)arg[0]);
+
+		if (command_args_values.eviction_policy_type < 0)
+			return FAILURE;
 	}
 
 	return 0;
@@ -333,6 +341,7 @@ static cli_option start_options[] = {
 	{'l', "load", "Load cache metadata from caching device (DANGEROUS - see manual or Admin Guide for details)"},
 	{'f', "force", "Force the creation of cache instance"},
 	{'c', "cache-mode", "Set cache mode from available: {"CAS_CLI_HELP_START_CACHE_MODES"} "CAS_CLI_HELP_START_CACHE_MODES_FULL"; without this parameter Write-Through will be set by default", 1, "NAME"},
+	{'e', "eviction-policy", "Set eviction policy from available: {"CAS_CLI_HELP_START_EVICTION_POLICY"} "CAS_CLI_HELP_START_EVICTION_POLICY_FULL"; without this parameter LRU will be set by default", 1, "NAME"},
 	{'x', "cache-line-size", CACHE_LINE_SIZE_DESC, 1, "NUMBER",  CLI_OPTION_DEFAULT_INT, 0, 0, ocf_cache_line_size_default / KiB},
 	{0}
 };
@@ -464,6 +473,7 @@ int handle_start()
 			command_args_values.state,
 			command_args_values.cache_device,
 			command_args_values.cache_mode,
+			command_args_values.eviction_policy_type,
 			command_args_values.line_size,
 			command_args_values.force);
 
@@ -858,6 +868,7 @@ static struct cas_param cas_cache_params[] = {
 
 #define PROMOTION_NHIT_THRESHOLD_DESC "Number of requests for given core line " \
 	"after which NHIT policy allows insertion into cache <%d-%d> (default: %d)"
+
 
 static cli_namespace set_param_namespace = {
 	.short_name = 'n',

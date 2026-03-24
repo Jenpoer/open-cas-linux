@@ -65,6 +65,8 @@ struct kcas_start_cache {
 	 */
 	ocf_cache_mode_t caching_mode;
 
+	ocf_eviction_t eviction_policy;
+
 	uint8_t flush_data; /**< should data be flushed? */
 
 	/**
