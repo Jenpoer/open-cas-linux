@@ -1529,6 +1529,39 @@ int handle_flush_cache()
 	return flush_cache(command_args_values.cache_id);
 }
 
+static cli_option set_eviction_policy_options[] = {
+	{'e', "eviction-policy", "Eviction policy. Available eviction policies: {"CAS_CLI_HELP_SET_EVICTION_POLICY"}", 1, "NAME", CLI_OPTION_REQUIRED},
+	{'i', "cache-id", CACHE_ID_DESC, 1, "ID", CLI_OPTION_REQUIRED},
+	{0},
+};
+
+int set_eviction_policy_command_handle_option(char *opt, const char **arg)
+{
+	if (!strcmp(opt, "eviction-policy")) {
+		command_args_values.eviction_policy_type =
+				validate_str_eviction_policy((const char*)arg[0]);
+
+		if (command_args_values.eviction_policy_type < 0)
+			return FAILURE;
+	} else if (!strcmp(opt, "cache-id")) {
+		if (validate_str_num(arg[0], "cache id", OCF_CACHE_ID_MIN,
+				OCF_CACHE_ID_MAX) == FAILURE)
+			return FAILURE;
+
+		command_args_values.cache_id = atoi(arg[0]);
+	} else {
+		return FAILURE;
+	}
+
+	return 0;
+}
+
+int handle_set_eviction_policy()
+{
+	return set_eviction_policy(command_args_values.eviction_policy_type,
+			command_args_values.cache_id);
+}
+
 /*******************************************************************************
  * IO Classes Commands
  ******************************************************************************/
@@ -2706,6 +2739,17 @@ static cli_command cas_commands[] = {
 			.command_handle_opts = script_handle_option,
 			.flags = (CLI_COMMAND_HIDDEN | CLI_SU_REQUIRED),
 			.handle = script_handle,
+		},
+		{
+			.name = "set-eviction-policy",
+			.short_name = 'E',
+			.desc = "Set eviction policy",
+			.long_desc = "Set eviction policy",
+			.options = set_eviction_policy_options,
+			.command_handle_opts = set_eviction_policy_command_handle_option,
+			.handle = handle_set_eviction_policy,
+			.flags = CLI_SU_REQUIRED,
+			.help = NULL,
 		},
 		{0},
 };

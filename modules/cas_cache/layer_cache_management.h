@@ -40,7 +40,7 @@ int cache_mngt_set_prefetch_param(ocf_cache_t cache, ocf_pf_id_t pf_id,
 int cache_mngt_get_prefetch_param(ocf_cache_t cache, ocf_pf_id_t pf_id,
 		uint32_t param_id, uint32_t *param_value);
 		
-int cache_mngt_set_eviction_policy(ocf_cache_t cache, uint32_t type);
+int cache_mngt_set_eviction_policy(const char *cache_name, size_t name_len, ocf_eviction_t type, uint8_t flush);
 
 int cache_mngt_get_eviction_policy(ocf_cache_t cache, uint32_t *type);
 

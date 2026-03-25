@@ -65,6 +65,12 @@ struct kcas_start_cache {
 	 */
 	ocf_cache_mode_t caching_mode;
 
+	/**
+	 * Eviction policy for new cache instance
+	 * valid choices are:
+	 * * lru
+	 * * lfu
+	 */
 	ocf_eviction_t eviction_policy;
 
 	uint8_t flush_data; /**< should data be flushed? */
@@ -95,6 +101,16 @@ struct kcas_set_cache_state {
 	uint16_t cache_id; /**< id of cache for which state should be set */
 
 	ocf_cache_mode_t caching_mode;
+
+	uint8_t flush_data; /**< should data be flushed? */
+
+	int ext_err_code;
+};
+
+struct kcas_set_cache_eviction_policy {
+	uint16_t cache_id; /**< id of cache for which state should be set */
+
+	ocf_eviction_t eviction_policy; /** < type of eviction policy */
 
 	uint8_t flush_data; /**< should data be flushed? */
 
@@ -424,6 +440,7 @@ struct kcas_standby_activate
  *    43    *    KCAS_IOCTL_ATTACH_CACHE                    *    OK            *
  *    44    *    KCAS_IOCTL_DISCONNECT_CACHE                *    OK            *
  *    45    *    KCAS_IOCTL_CONNECT_CACHE                   *    OK            *
+ *    46    *    KCAS_IOCTL_SET_EVICTION_POLICY            	*    OK            *
  *******************************************************************************
  */
 
@@ -533,6 +550,8 @@ struct kcas_standby_activate
 
 /** Connect cache - load cache and reconnect existing pass-through exp_objs */
 #define KCAS_IOCTL_CONNECT_CACHE _IOWR(KCAS_IOCTL_MAGIC, 45, struct kcas_start_cache)
+/** Set eviction policy (lru or lfu) */
+#define KCAS_IOCTL_SET_EVICTION_POLICY _IOR(KCAS_IOCTL_MAGIC, 46, struct kcas_set_cache_eviction_policy)
 
 /**
  * Extended kernel CAS error codes

@@ -232,6 +232,13 @@ int core_params_get(unsigned int cache_id, unsigned int core_id,
 int set_cache_mode(unsigned int cache_state, unsigned int cache_id, int flush);
 
 /**
+ * @brief handle set eviction policy (-E) command
+ * @param in evicition policy identifier of cache mode (WRITE_BACK, WRITE_THROUGH etc...)
+ * @param cache_id id of cache device
+ */
+int set_eviction_policy(unsigned int policy, unsigned int cache_id);
+
+/**
  * @brief add core device to a cache
  *
  * @param cache_id cache to which new core is being added

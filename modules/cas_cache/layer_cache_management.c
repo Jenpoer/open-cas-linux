@@ -1118,41 +1118,6 @@ int cache_mngt_get_prefetch_param(ocf_cache_t cache, ocf_pf_id_t pf_id,
 	return result;
 }
 
-int cache_mngt_set_eviction_policy(ocf_cache_t cache, ocf_eviction_t type)
-{
-	int result;
-
-	result = _cache_mngt_lock_sync(cache);
-	if (result) {
-		return result;
-	}
-
-	result = ocf_mngt_cache_eviction_set_policy(cache, type);
-	if (result)
-		goto out;
-
-	result = _cache_mngt_save_sync(cache);
-
-out:
-	ocf_mngt_cache_unlock(cache);
-	return result;
-}
-
-int cache_mngt_get_eviction_policy(ocf_cache_t cache, ocf_eviction_t *type)
-{
-	int result;
-
-	result = _cache_mngt_read_lock_sync(cache);
-	if (result) {
-		return result;
-	}
-
-	result = ocf_mngt_cache_eviction_get_policy(cache, type);
-
-	ocf_mngt_cache_read_unlock(cache);
-	return result;
-}
-
 struct get_paths_ctx {
 	char *core_path_name_tab;
 	int max_count;
@@ -3835,6 +3800,96 @@ err:
 	if (rollback_result != -KCAS_ERR_WAITING_INTERRUPTED)
 		kfree(context);
 
+/**
+ * @brief routine implementing dynamic cache eviction policy switching
+ * @param cache_name name of cache to which operation applies
+ * @param type target eviction policy (LRU, LFU)
+ * @param flush shall we flush dirty data during switch, or shall we flush
+ *            all remaining dirty data before entering new mode?
+ */
+int cache_mngt_set_eviction_policy(const char *cache_name, size_t name_len, ocf_eviction_t type, uint8_t flush)
+{
+	ocf_eviction_t old_type;
+	ocf_cache_t cache;
+	int result;
+
+	result = ocf_mngt_cache_get_by_name(cas_ctx, cache_name,
+					name_len, &cache);
+	if (result)
+		return result;
+
+	if (ocf_cache_is_standby(cache)) {
+		result = -OCF_ERR_CACHE_STANDBY;
+		goto put;
+	}
+
+	if (!ocf_cache_is_device_attached(cache)) {
+		result = -OCF_ERR_CACHE_DETACHED;
+		goto put;
+	}
+	
+	old_type = ocf_cache_get_eviction_policy(cache);
+
+	// If the old type == new type, no need to do anything
+	if(old_type == type) {
+		printk(KERN_INFO "%s is already using the requested eviction policy\n", cache_name);
+		result = 0;
+		goto put;
+	}
+
+	// Flush cache if requested
+	if (flush) {
+		result = _cache_flush_with_lock(cache);
+		if (result)
+			goto put;
+	}
+
+	result = _cache_mngt_lock_sync(cache);
+	if (result)
+		goto put;
+
+	if (old_type != ocf_cache_get_eviction_policy(cache)) {
+		printk(KERN_WARNING "%s eviction policy changed during flush\n",
+				ocf_cache_get_name(cache));
+		goto unlock;
+	}
+
+	if (flush) {
+		result = _cache_mngt_cache_flush_uninterruptible(cache);
+		if (result)
+			goto unlock;
+	}
+
+	result = ocf_mngt_cache_eviction_set_policy(cache, type);
+	if (result)
+		goto unlock;
+
+	result = _cache_mngt_save_sync(cache);
+	if (result) {
+		printk(KERN_ERR "%s: Failed to save new eviction policy. "
+				"Restoring old one!\n", cache_name);
+		ocf_mngt_cache_eviction_set_policy(cache, old_type);
+	}
+
+unlock:
+	ocf_mngt_cache_unlock(cache);
+put:
+	ocf_mngt_cache_put(cache);
+	return result;
+}
+
+int cache_mngt_get_eviction_policy(ocf_cache_t cache, uint32_t *type)
+{
+	int result;
+
+	result = _cache_mngt_read_lock_sync(cache);
+	if (result) {
+		return result;
+	}
+
+	result = ocf_mngt_cache_eviction_get_policy(cache, type);
+
+	ocf_mngt_cache_read_unlock(cache);
 	return result;
 }
 
