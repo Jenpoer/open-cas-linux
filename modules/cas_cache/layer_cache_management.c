@@ -2054,6 +2054,12 @@ int cache_mngt_create_cache_cfg(struct ocf_mngt_cache_config *cfg,
 					"loading cache is forbidden\n");
 			return -OCF_ERR_INVAL;
 		}
+
+		if(cmd->eviction_policy != ocf_eviction_none) {
+			printk(KERN_WARNING "Specifying eviction policy while "
+					"loading cache is forbidden\n");
+			return -OCF_ERR_INVAL;
+		}
 	} else if (cmd->cache_id == OCF_CACHE_ID_INVALID) {
 		cache_id = find_free_cache_id(cas_ctx);
 		if (cache_id == OCF_CACHE_ID_INVALID)
@@ -2292,6 +2298,7 @@ struct cache_mngt_probe_metadata_context {
 	char *cache_name_meta;
 	ocf_cache_mode_t *cache_mode_meta;
 	ocf_cache_line_size_t *cache_line_size_meta;
+	ocf_eviction_t *eviction_meta;
 };
 
 static void cache_mngt_probe_metadata_end(void *priv, int error,
@@ -2316,13 +2323,14 @@ static void cache_mngt_probe_metadata_end(void *priv, int error,
 			OCF_CACHE_NAME_SIZE);
 	*(context->cache_mode_meta) = status->cache_mode;
 	*(context->cache_line_size_meta) = status->cache_line_size;
+	*(context->eviction_meta) = status->eviction_policy;
 err:
 	complete(&context->cmpl);
 }
 
 static int _cache_mngt_probe_metadata(char *cache_path_name,
 		char *cache_name_meta, ocf_cache_mode_t *cache_mode_meta,
-		ocf_cache_line_size_t *cache_line_size_meta)
+		ocf_cache_line_size_t *cache_line_size_meta, ocf_eviction_t *eviction_meta)
 {
 	struct cache_mngt_probe_metadata_context context;
 	cas_bdev_handle_t bdev_handle;
@@ -2349,6 +2357,7 @@ static int _cache_mngt_probe_metadata(char *cache_path_name,
 	context.cache_name_meta = cache_name_meta;
 	context.cache_mode_meta = cache_mode_meta;
 	context.cache_line_size_meta = cache_line_size_meta;
+	context.eviction_meta = eviction_meta;
 
 	ocf_metadata_probe(cas_ctx, volume, cache_mngt_probe_metadata_end,
 			&context);
@@ -2791,6 +2800,7 @@ int cache_mngt_init_instance(struct ocf_mngt_cache_config *cfg,
 	int result = 0, rollback_result = 0;
 	ocf_cache_mode_t cache_mode_meta;
 	ocf_cache_line_size_t cache_line_size_meta;
+	ocf_eviction_t eviction_meta;
 
 	switch (cmd->init_cache) {
 		case CACHE_INIT_STANDBY_NEW:
@@ -2819,7 +2829,7 @@ int cache_mngt_init_instance(struct ocf_mngt_cache_config *cfg,
 	case CACHE_INIT_STANDBY_LOAD:
 		result = _cache_mngt_probe_metadata(cmd->cache_path_name,
 				cache_name_meta, &cache_mode_meta,
-				&cache_line_size_meta);
+				&cache_line_size_meta, &eviction_meta);
 		if (result) {
 			ocf_volume_destroy(attach_cfg->device.volume);
 			module_put(THIS_MODULE);
@@ -2854,6 +2864,7 @@ int cache_mngt_init_instance(struct ocf_mngt_cache_config *cfg,
 		strscpy(cfg->name, cache_name_meta, OCF_CACHE_NAME_SIZE);
 		cfg->cache_mode = cache_mode_meta;
 		cfg->cache_line_size = cache_line_size_meta;
+		cfg->eviction_policy = eviction_meta;
 	default:
 		break;
 	}

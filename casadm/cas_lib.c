@@ -1116,7 +1116,7 @@ int start_cache(uint16_t cache_id, unsigned int cache_init,
 int attach_cache(uint16_t cache_id, const char *cache_device, int force)
 {
 	return _start_cache(cache_id, CACHE_INIT_NEW, cache_device,
-			ocf_cache_mode_none, ocf_eviction_default, ocf_cache_line_size_none, force, false);
+			ocf_cache_mode_none, ocf_eviction_none, ocf_cache_line_size_none, force, false);
 }
 
 int detach_cache(uint16_t cache_id)
@@ -3265,7 +3265,7 @@ int standby_load(int cache_id, ocf_cache_line_size_t line_size,
 			CACHE_INIT_STANDBY_LOAD,
 			cache_device,
 			ocf_cache_mode_none,
-			ocf_eviction_default,
+			ocf_eviction_none,
 			line_size,
 			0);
 }

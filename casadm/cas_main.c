@@ -80,7 +80,7 @@ static struct command_args command_args_values = {
 		.line_size = ocf_cache_line_size_none,
 		.cache_state_flush = UNDEFINED, /* three state logic: YES NO UNDEFINED */
 		.flush_data = 1,
-		.eviction_policy_type = 0,
+		.eviction_policy_type = ocf_eviction_none,
 		.cleaning_policy_type = 0,
 		.promotion_policy_type = 0,
 		.script_subcmd = -1,
@@ -448,8 +448,9 @@ int handle_start()
 		if (command_args_values.force ||
 				command_args_values.line_size != ocf_cache_line_size_none ||
 				command_args_values.cache_mode != ocf_cache_mode_none ||
+				command_args_values.eviction_policy_type != ocf_eviction_none ||
 				command_args_values.cache_id != OCF_CACHE_ID_INVALID) {
-			cas_printf(LOG_ERR, "Use of 'load' with 'force', 'cache-id',"
+			cas_printf(LOG_ERR, "Use of 'load' with 'force', 'cache-id', 'eviction-policy',"
 					" 'cache-mode' or 'cache-line-size'"
 					" simultaneously is forbidden.\n");
 			return FAILURE;
@@ -461,6 +462,10 @@ int handle_start()
 
 		if (command_args_values.cache_mode == ocf_cache_mode_none) {
 			command_args_values.cache_mode = ocf_cache_mode_default;
+		}
+
+		if(command_args_values.eviction_policy_type == ocf_eviction_none) {
+			command_args_values.eviction_policy_type = ocf_eviction_default;
 		}
 	}
 
