@@ -1,7 +1,7 @@
 [submodule "ocf"]
 	path = ocf
 	url = git@seagit.okla.seagate.com:adapt-ml/lfu-fork/ocf-lfu-fork.git
-	branch = lfu-v26.03
+	branch = lfu-v26.03-sharded-rebase
 [submodule "test/functional/test-framework"]
 	path = test/functional/test-framework
 	url = https://github.com/Open-CAS/test-framework.git
