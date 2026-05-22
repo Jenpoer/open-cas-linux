@@ -3713,6 +3713,7 @@ int cache_mngt_connect_cache(struct ocf_mngt_cache_config *cfg,
 	char cache_name_meta[OCF_CACHE_NAME_SIZE];
 	ocf_cache_mode_t cache_mode_meta;
 	ocf_cache_line_size_t cache_line_size_meta;
+	ocf_eviction_t eviction_meta;
 
 	if (!try_module_get(THIS_MODULE)) {
 		ocf_volume_destroy(attach_cfg->device.volume);
@@ -3728,7 +3729,7 @@ int cache_mngt_connect_cache(struct ocf_mngt_cache_config *cfg,
 
 	result = _cache_mngt_probe_metadata(cmd->cache_path_name,
 			cache_name_meta, &cache_mode_meta,
-			&cache_line_size_meta);
+			&cache_line_size_meta, &eviction_meta);
 	if (result) {
 		ocf_volume_destroy(attach_cfg->device.volume);
 		module_put(THIS_MODULE);
@@ -3846,6 +3847,8 @@ err:
 	if (rollback_result != -KCAS_ERR_WAITING_INTERRUPTED)
 		kfree(context);
 
+	return result;
+}
 
 struct cache_mngt_list_ctx {
 	struct kcas_cache_list *list;
