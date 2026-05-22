@@ -3,6 +3,7 @@
 * Copyright(c) 2022      David Lee <live4thee@gmail.com>
 * Copyright(c) 2024-2025 Huawei Technologies
 * Copyright(c) 2026 Unvertical
+* Copyright(c) 2026 Seagate Technology LLC and/or its affiliates
 * SPDX-License-Identifier: BSD-3-Clause
 */
 
